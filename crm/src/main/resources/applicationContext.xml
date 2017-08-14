@@ -1,0 +1,61 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:aop="http://www.springframework.org/schema/aop" xmlns:tx="http://www.springframework.org/schema/tx"
+	xsi:schemaLocation="
+		http://www.springframework.org/schema/beans 
+		http://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/context 
+		http://www.springframework.org/schema/context/spring-context.xsd
+		http://www.springframework.org/schema/tx 
+		http://www.springframework.org/schema/tx/spring-tx.xsd
+		http://www.springframework.org/schema/aop 
+		http://www.springframework.org/schema/aop/spring-aop.xsd
+		">  
+	
+	
+	<bean id="transactionManager" class="org.springframework.orm.hibernate5.HibernateTransactionManager">
+		<property name="sessionFactory" ref="sessionFactory"/>
+	</bean>
+	
+	
+	<tx:advice id="advice" transaction-manager="transactionManager">
+	    <tx:attributes>	     
+	      <tx:method name="do*" propagation="REQUIRED"/>
+	      <tx:method name="add*" propagation="REQUIRED"/>
+	      <tx:method name="update*" propagation="REQUIRED"/>
+	      <tx:method name="save*" propagation="REQUIRED"/>
+	      <tx:method name="delete*" propagation="REQUIRED"/>
+	      <tx:method name="*" read-only="true"/>
+	    </tx:attributes>
+	</tx:advice>
+	
+	<aop:config>
+		<aop:pointcut id="serviceMethod" expression="execution(* com.itheima.service.impl.*.*(..))"/>
+		<aop:advisor pointcut-ref="serviceMethod" advice-ref="advice" />
+	</aop:config>
+	
+	
+	<bean id="dataSource" class="com.mchange.v2.c3p0.ComboPooledDataSource" destroy-method="close">
+		<property name="driverClass" value="com.mysql.jdbc.Driver" />
+		<property name="jdbcUrl" value="jdbc:mysql://127.0.0.1:3306/day59?characterEncoding=utf8" />
+		<property name="user" value="root" />
+		<property name="password" value="root" />
+	</bean>
+	
+	<bean id="sessionFactory" class="org.springframework.orm.hibernate5.LocalSessionFactoryBean">
+		<property name="dataSource" ref="dataSource"/>
+		<property name="configLocation" value="classpath:hibernate.cfg.xml"></property>
+	</bean>
+	
+	<bean id="customerDao"  class="com.itheima.dao.impl.CustomerDaoImpl">
+		<property name="sessionFactory" ref="sessionFactory" />
+	</bean>
+	<bean id="customerService"  class="com.itheima.service.impl.CustomerServiceImpl">
+		<property name="customerDao" ref="customerDao" />
+	</bean>
+	<bean id="customerAction"  class="com.itheima.web.action.CustomerAction" scope="prototype">
+		<property name="customerService" ref="customerService" />
+	</bean>
+</beans>
+	
